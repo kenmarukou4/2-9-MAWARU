@@ -10,10 +10,13 @@ window.APP_CONFIG = {
   appName: '2-9 MAWARU',
   sdkVersion: '10.8.0',
   firebase: {
-    apiKey: 'YOUR_API_KEY',
-    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-    databaseURL: 'https://YOUR_DATABASE_NAME.asia-southeast1.firebasedatabase.app',
-    projectId: 'YOUR_PROJECT_ID',
-    appId: 'YOUR_APP_ID'
+    apiKey: "AIzaSyAVlkQol4fFNfmiA8UfNVxpmV5vxVrW40A",
+    authDomain: "mawaru-2-9.firebaseapp.com",
+    databaseURL: "https://mawaru-2-9-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "mawaru-2-9",
+    storageBucket: "mawaru-2-9.firebasestorage.app",
+    messagingSenderId: "660682298831",
+    appId: "1:660682298831:web:28b19ab4161923d8d0eeba",
+    measurementId: "G-S2QWKYFM7M"
   }
 };
