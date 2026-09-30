@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>2-9 MAWARU 得点入力</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;800;900&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#F4F7FC; --ink:#09152B; --blue:#1463FF; --gold:#FFD43B; --cyan:#25D6E9;
+  --green:#0B806B; --red:#D92D3A; --line:#C8D2E2; --fill:#E4E9F1; --sub:#53647E; --mute:#78879D;
+  --navy2:#102A56; --paleRed:#FFF0F1; --paleGreen:#DDF7EF;
+  --shadow:0 8px 22px rgba(6,17,38,.14);
+  --sans:"Noto Sans JP","Noto Sans CJK JP","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
+  --mono:"Roboto Mono","SF Mono",Menlo,Consolas,"Liberation Mono","Noto Sans JP","Noto Sans CJK JP","Hiragino Kaku Gothic ProN","Yu Gothic",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{background:var(--canvas)}
+body{font-family:var(--sans);color:var(--ink);background:var(--canvas);min-height:100vh;min-height:100dvh;-webkit-text-size-adjust:100%}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+button:disabled{cursor:not-allowed}
+:focus{outline:none}
+:focus-visible{box-shadow:0 0 0 3px var(--canvas),0 0 0 6px var(--ink)!important}
+.big:focus-visible,.er .in:focus-visible{box-shadow:0 0 0 5px rgba(20,99,255,.28)!important}
+.big.err:focus-visible,.er .in.bad:focus-visible{box-shadow:0 0 0 5px rgba(217,45,58,.28)!important}
+
+/* ヘッダー */
+.top{position:sticky;top:0;z-index:10;background:var(--ink);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+.logo{width:36px;height:36px;border-radius:11px;background:var(--gold);display:grid;place-items:center;flex:none}
+.brand{font:900 20px/1 var(--sans);flex:1}
+.pill{height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;gap:8px;font:800 14px/1 var(--sans);background:var(--paleGreen);color:var(--green);white-space:nowrap}
+.pill i{width:10px;height:10px;border-radius:5px;background:var(--green)}
+.pill.off{background:var(--paleRed);color:var(--red)}.pill.off i{background:var(--red)}
+.pill.wait{background:var(--fill);color:var(--sub)}.pill.wait i{background:var(--mute)}
+.demo{background:var(--gold);color:var(--ink);font:800 14px/1.5 var(--sans);padding:8px 16px}
+
+/* 画面 */
+.screen{padding:16px 16px 0}
+.center{min-height:calc(100dvh - 60px);display:flex;flex-direction:column;justify-content:center}
+.panel{background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:24px 20px}
+.panel h1{font:900 26px/1.3 var(--sans)}
+.panel p{margin-top:8px;font:700 16px/1.6 var(--sans);color:var(--sub);text-wrap:balance}
+.big{display:block;width:100%;height:60px;margin-top:16px;border:3px solid var(--line);border-radius:16px;background:#fff;padding:0 16px;font:800 20px/1 var(--sans);color:var(--ink)}
+.big:focus{border-color:var(--blue)}
+.big.err{border-color:var(--red)}
+input::placeholder{color:var(--mute);font-weight:700}
+.msg{margin-top:10px;min-height:22px;font:800 15px/1.5 var(--sans);color:var(--red)}
+.btn{height:56px;padding:0 20px;border-radius:15px;border:2px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;font:900 18px/1 var(--sans);white-space:nowrap;transition:filter .12s,transform .06s}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-primary:active:not(:disabled){filter:brightness(.9)}
+.btn-outline{background:#fff;border-color:var(--line);color:var(--ink)}
+.btn-ghost{background:var(--fill);border-color:var(--fill);color:var(--sub)}
+.btn-danger{background:var(--red);border-color:var(--red);color:#fff}
+.btn:disabled{opacity:.5}
+.btn.block{width:100%}
+
+/* 名前 */
+.namebox label{display:block;font:800 16px/1.4 var(--sans)}
+.namebox .big{margin-top:8px}
+
+/* ゴール */
+.glist{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.goal{position:relative;background:#fff;border-radius:20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;padding:10px 10px 10px 16px;min-height:84px}
+.goal::after{content:"";position:absolute;inset:0;border-radius:20px;border:3px solid var(--blue);pointer-events:none}
+.goal.off{background:var(--fill);box-shadow:none}
+.goal.off::after{border:2px solid var(--line)}
+.g-info{flex:1;min-width:0}
+.g-name{font:900 19px/1.25 var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-pts{margin-top:2px;font:700 14px/1.3 var(--mono);color:var(--sub)}
+.cbtn{flex:none;width:58px;height:64px;border-radius:15px;border:2px solid var(--line);display:grid;place-items:center;transition:filter .12s,transform .06s}
+.cbtn:active{transform:translateY(1px)}
+.cbtn.minus{background:#fff;color:var(--ink)}
+.cbtn.plus{background:var(--blue);border-color:var(--blue);color:#fff}
+.cbtn.plus:active{filter:brightness(.9)}
+.g-count{flex:none;width:52px;text-align:center;font:700 34px/1 var(--mono);color:var(--blue)}
+.goal.off .g-count{color:var(--mute)}
+
+/* 最近の記録・管理 */
+.h2{margin:28px 0 10px;font:900 18px/1.3 var(--sans)}
+.recent{list-style:none;display:flex;flex-direction:column;gap:8px}
+.rec{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--line);border-radius:15px;padding:8px 8px 8px 14px;min-height:56px}
+.rec .n{flex:1;min-width:0;font:800 17px/1.3 var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec .s{font:700 18px/1 var(--mono);color:#0A45C2;white-space:nowrap}
+.rec .x{height:40px;padding:0 12px;border-radius:11px;background:var(--fill);color:var(--sub);font:800 14px/1 var(--sans)}
+.none{font:700 15px/1.6 var(--sans);color:var(--sub)}
+.admin{display:flex;flex-direction:column;gap:10px}
+.bottom-pad{height:230px}
+
+/* 下部固定の合計＋記録ボタン */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:9;background:#fff;border-top:2px solid var(--line);box-shadow:0 -8px 22px rgba(6,17,38,.12);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.dock-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.total{font:700 40px/1 var(--mono);color:var(--ink)}
+.total small{font:800 20px/1 var(--sans);margin-left:2px}
+.dock-sub{font:700 14px/1.3 var(--sans);color:var(--sub);text-align:right}
+.dock-msg{min-height:0;margin:6px 0 0;font:800 14px/1.45 var(--sans);color:var(--red)}
+.dock-msg:empty{display:none}
+.actions{display:flex;gap:10px;margin-top:10px}
+.actions .redo{width:112px;padding:0;font-size:16px}
+.actions .save{flex:1}
+
+/* トースト */
+.toast{position:fixed;left:16px;right:16px;top:calc(64px + env(safe-area-inset-top));z-index:30;background:var(--green);color:#fff;border-radius:15px;padding:14px 16px;font:800 17px/1.4 var(--sans);box-shadow:var(--shadow)}
+
+/* シート（確認・編集） */
+.veil{position:fixed;inset:0;z-index:40;background:rgba(6,17,38,.72);display:flex;align-items:flex-end}
+.sheet{width:100%;max-height:92dvh;background:#fff;border-radius:24px 24px 0 0;display:flex;flex-direction:column;overflow:hidden;padding-bottom:env(safe-area-inset-bottom)}
+.sheet.full{height:92dvh}
+.sh-h{flex:none;background:var(--ink);color:#fff;padding:18px 20px}
+.sh-t{font:900 22px/1.3 var(--sans)}
+.sh-s{margin-top:4px;font:700 14px/1.5 var(--sans);color:var(--cyan)}
+.sh-b{flex:1;overflow-y:auto;padding:18px 20px}
+.sh-b p{font:700 17px/1.7 var(--sans)}
+.sh-e{flex:none;min-height:0;padding:0 20px;font:800 14px/1.5 var(--sans);color:var(--red)}
+.sh-e:not(:empty){padding-top:8px}
+.sh-f{flex:none;padding:14px 20px 18px;display:flex;gap:10px}
+.sh-f .btn{flex:1;padding:0 8px}
+.er{display:grid;grid-template-columns:1fr 92px 48px;gap:8px;align-items:center;margin-bottom:10px}
+.er .in{height:52px;width:100%;border:3px solid var(--blue);border-radius:13px;background:#fff;padding:0 12px;font:800 17px/1 var(--sans);color:var(--ink)}
+.er .in.num{text-align:right;font-family:var(--mono);font-weight:700}
+.er .in.bad{border-color:var(--red)}
+.er .del{width:48px;height:52px;border-radius:13px;background:var(--fill);color:var(--sub);display:grid;place-items:center}
+.er .del:disabled{opacity:.4}
+.eh{display:grid;grid-template-columns:1fr 92px 48px;gap:8px;margin-bottom:8px;font:700 13px/1 var(--sans);color:var(--sub)}
+.add{margin-top:6px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <span class="logo" id="logo"></span>
+    <span class="brand">2-9 MAWARU</span>
+    <span class="pill wait" id="pill"><i></i><span id="pillText">接続中</span></span>
+  </header>
+  <div class="demo" id="demoBar" hidden>デモ動作中：Firebase未接続です（PINは「demo」）。同じブラウザ内のタブ同士でだけ動きます。</div>
+
+  <!-- 起動中 / エラー -->
+  <section class="screen center" id="scrBoot">
+    <div class="panel"><h1 id="bootTitle">接続しています…</h1><p id="bootText">少しお待ちください。</p></div>
+  </section>
+
+  <!-- PIN -->
+  <section class="screen center" id="scrLock" hidden>
+    <div class="panel">
+      <h1>スタッフ用の入力画面</h1>
+      <p>運営から伝えられたPINを入力してください。</p>
+      <input class="big" id="pin" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="PIN" aria-label="PIN">
+      <div class="msg" id="pinMsg" role="alert"></div>
+      <button class="btn btn-primary block" id="btnUnlock" type="button">ロックを解除</button>
+    </div>
+  </section>
+
+  <!-- 入力 -->
+  <main class="screen" id="scrMain" hidden>
+    <div class="namebox">
+      <label for="name">名前（全角14文字まで）</label>
+      <input class="big" id="name" type="text" maxlength="14" enterkeyhint="done" autocomplete="off" autocapitalize="off" placeholder="名前を入力してください" aria-describedby="nameMsg">
+      <div class="msg" id="nameMsg" hidden>名前が空です。全角14文字以内で入力してください。</div>
+    </div>
+
+    <div class="glist" id="goals"></div>
+
+    <h2 class="h2">最近の記録</h2>
+    <ul class="recent" id="recent"></ul>
+
+    <h2 class="h2">管理</h2>
+    <div class="admin">
+      <button class="btn btn-ghost block" id="btnEdit" type="button">ゴール・配点を編集</button>
+      <button class="btn btn-ghost block" id="btnWipe" type="button">本日の記録をすべて消す</button>
+    </div>
+    <div class="bottom-pad"></div>
+
+    <div class="dock">
+      <div class="dock-row">
+        <div class="total" id="total" aria-live="polite">0<small>点</small></div>
+        <div class="dock-sub" id="dockSub">ゴールを追加してください</div>
+      </div>
+      <div class="dock-msg" id="dockMsg" role="alert"></div>
+      <div class="actions">
+        <button class="btn btn-outline redo" id="btnRedo" type="button">やり直す</button>
+        <button class="btn btn-primary save" id="btnSave" type="button">記録する</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="toastRoot" aria-live="polite"></div>
+  <div id="sheetRoot"></div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script src="backend.js"></script>
+<script>
+(function(){
+'use strict';
+var B = window.Backend, LIM = B.LIM;
+
+var ICON = {
+  minus:'<svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 20H34" stroke="currentColor" stroke-width="6"/></svg>',
+  plus:'<svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 20H34M20 6V34" stroke="currentColor" stroke-width="6"/></svg>',
+  close:'<svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M5 5L21 21M21 5L5 21"/></svg>',
+  logo:'<svg width="22" height="22" viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="#09152B" stroke-width="2.8" stroke-linecap="round"><circle r="12.5"/><path d="M-3.75 -3.75L3.75 3.75M3.75 -3.75L-3.75 3.75"/></svg>'
+};
+function $(id){ return document.getElementById(id); }
+function h(tag, props, kids){
+  var e = document.createElement(tag);
+  for (var k in (props || {})){
+    var v = props[k];
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k === 'html') e.innerHTML = v;     /* 固定のアイコンにだけ使用 */
+    else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, '');
+    else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  (kids || []).forEach(function(c){ if (c != null) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return e;
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function toHalf(s){ return s.replace(/[０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }); }
+$('logo').innerHTML = ICON.logo;
+if (B.mode === 'demo') $('demoBar').hidden = false;
+
+/* ---------- 状態 ---------- */
+var goals = B.defaultGoals(), counts = {}, records = [];
+var authReady = false, staff = false, connected = false, fatal = '';
+var saving = null, showErr = false;
+var nameEl = $('name');
+
+/* ---------- 画面の切り替え ---------- */
+function screen(){
+  var which = fatal ? 'boot' : (!authReady ? 'boot' : (staff ? 'main' : 'lock'));
+  $('scrBoot').hidden = which !== 'boot';
+  $('scrLock').hidden = which !== 'lock';
+  $('scrMain').hidden = which !== 'main';
+  if (fatal) { $('bootTitle').textContent = '接続できません'; $('bootText').textContent = fatal; }
+  var p = $('pill');
+  if (!authReady && !fatal) { p.className = 'pill wait'; $('pillText').textContent = '接続中'; }
+  else if (connected) { p.className = 'pill'; $('pillText').textContent = '接続中'; $('pillText').textContent = 'オンライン'; }
+  else { p.className = 'pill off'; $('pillText').textContent = 'オフライン'; }
+  if (which === 'lock') setTimeout(function(){ $('pin').focus(); }, 0);
+}
+
+/* ---------- ゴール ---------- */
+var refs = {};
+function cnt(id){ return counts[id] || 0; }
+function totalScore(){ return goals.reduce(function(s, g){ return s + cnt(g.id) * g.pts; }, 0); }
+function totalBalls(){ return goals.reduce(function(s, g){ return s + cnt(g.id); }, 0); }
+function activeGoals(){ return goals.filter(function(g){ return cnt(g.id) > 0; }).length; }
+
+function buildGoals(){
+  var box = $('goals'); box.textContent = ''; refs = {};
+  goals.forEach(function(g){
+    var count = h('div', { class: 'g-count', text: '0' });
+    var card = h('div', { class: 'goal off' }, [
+      h('div', { class: 'g-info' }, [h('div', { class: 'g-name', text: g.name }), h('div', { class: 'g-pts', text: '1個 ' + g.pts + '点' })]),
+      h('button', { class: 'cbtn minus', type: 'button', 'aria-label': g.name + 'を1個減らす', html: ICON.minus, onclick: function(){ step(g.id, -1); } }),
+      count,
+      h('button', { class: 'cbtn plus', type: 'button', 'aria-label': g.name + 'を1個増やす', html: ICON.plus, onclick: function(){ step(g.id, 1); } })
+    ]);
+    box.appendChild(card); refs[g.id] = { card: card, count: count };
+  });
+  update();
+}
+function step(id, d){
+  if (saving) return;
+  counts[id] = Math.max(0, Math.min(LIM.maxCount, cnt(id) + d));
+  update();
+}
+function update(){
+  goals.forEach(function(g){
+    var r = refs[g.id]; if (!r) return;
+    var n = cnt(g.id); r.count.textContent = String(n); r.card.className = 'goal' + (n > 0 ? '' : ' off');
+  });
+  var sc = totalScore(), balls = totalBalls();
+  $('total').innerHTML = ''; $('total').appendChild(document.createTextNode(String(sc)));
+  $('total').appendChild(h('small', { text: '点' }));
+  $('dockSub').textContent = balls > 0 ? activeGoals() + 'ゴール / 合計' + balls + '個' : 'ゴールを追加してください';
+  var nameBad = showErr && !nameEl.value.trim();
+  nameEl.classList.toggle('err', nameBad); nameEl.setAttribute('aria-invalid', nameBad ? 'true' : 'false');
+  $('nameMsg').hidden = !nameBad;
+  if (showErr && !saving) {
+    $('dockMsg').textContent = totalBalls() === 0 ? 'どれか1つ以上のゴールを「＋」で追加してください。' : '';
+  }
+}
+
+/* ---------- 最近の記録 ---------- */
+function renderRecent(){
+  var ul = $('recent'); ul.textContent = '';
+  var list = records.slice().sort(function(a, b){ return b.at - a.at; }).slice(0, 5);
+  if (!list.length) { ul.appendChild(h('li', { class: 'none', text: 'まだ記録がありません。' })); return; }
+  list.forEach(function(r){
+    ul.appendChild(h('li', { class: 'rec' }, [
+      h('span', { class: 'n', text: r.name }),
+      h('span', { class: 's', text: r.score + '点' }),
+      h('button', { class: 'x', type: 'button', text: '取り消す', 'aria-label': r.name + ' ' + r.score + '点の記録を取り消す', onclick: function(){
+        confirmSheet('この記録を取り消す', '「' + r.name + '　' + r.score + '点」を取り消します。', '取り消す', function(){ return B.removeRecords([r.id]); });
+      } })
+    ]));
+  });
+}
+
+/* ---------- 記録する ---------- */
+var toastTimer = null;
+function toast(text){
+  var root = $('toastRoot'); root.textContent = '';
+  root.appendChild(h('div', { class: 'toast', text: text }));
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ root.textContent = ''; }, 3200);
+}
+function lockForm(on){
+  nameEl.disabled = on; $('btnRedo').disabled = on; $('btnSave').disabled = on;
+  $('btnSave').textContent = on ? '送信中…' : '記録する';
+}
+function resetForm(){ counts = {}; nameEl.value = ''; showErr = false; $('dockMsg').textContent = ''; update(); }
+
+function save(){
+  if (saving) return;
+  var name = nameEl.value.trim();
+  if (!name || totalBalls() === 0) { showErr = true; update(); if (!name) nameEl.focus(); return; }
+  if (!connected) { $('dockMsg').textContent = 'オフラインです。通信が戻ってから記録してください（入力は消えません）。'; return; }
+  var key = B.newKey(), score = totalScore(); name = name.slice(0, LIM.maxName);
+  saving = key; showErr = false; $('dockMsg').textContent = ''; lockForm(true);
+  var slow = setTimeout(function(){ if (saving === key) $('dockMsg').textContent = 'まだ送信できていません。通信が戻れば自動で送信されます。そのままお待ちください。'; }, 8000);
+  B.addRecord(key, { name: name, score: score }).then(function(){
+    clearTimeout(slow); saving = null; lockForm(false); resetForm();
+    toast('記録しました　' + name + '　' + score + '点');
+  }).catch(function(e){
+    clearTimeout(slow); saving = null; lockForm(false);
+    $('dockMsg').textContent = B.isPermission(e)
+      ? '権限がありません。ページを再読み込みして、PINを入力し直してください。'
+      : '記録できませんでした。通信を確認して、もう一度押してください。';
+  });
+}
+
+/* ---------- シート（確認・編集） ---------- */
+var lastFocus = null, sheetKey = null;
+function openSheet(panel, focusEl){
+  lastFocus = document.activeElement;
+  var root = $('sheetRoot'); root.textContent = '';
+  root.appendChild(h('div', { class: 'veil' }, [panel]));
+  ['scrMain', 'scrLock'].forEach(function(i){ $(i).setAttribute('inert', ''); });
+  sheetKey = function(e){ if (e.key === 'Escape') { e.preventDefault(); closeSheet(); } };
+  document.addEventListener('keydown', sheetKey, true);
+  (focusEl || panel).focus();
+}
+function closeSheet(){
+  $('sheetRoot').textContent = '';
+  ['scrMain', 'scrLock'].forEach(function(i){ $(i).removeAttribute('inert'); });
+  if (sheetKey) { document.removeEventListener('keydown', sheetKey, true); sheetKey = null; }
+  if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus();
+}
+function confirmSheet(title, body, okLabel, action){
+  var msg = h('div', { class: 'sh-e', role: 'alert' });
+  var cancel = h('button', { class: 'btn btn-outline', type: 'button', text: 'キャンセル', onclick: closeSheet });
+  var ok = h('button', { class: 'btn btn-danger', type: 'button', text: okLabel });
+  ok.addEventListener('click', function(){
+    ok.disabled = true; cancel.disabled = true; msg.textContent = '';
+    Promise.resolve(action()).then(closeSheet).catch(function(e){
+      ok.disabled = false; cancel.disabled = false;
+      msg.textContent = B.isPermission(e) ? '権限がありません。PINを入力し直してください。' : '実行できませんでした。通信を確認してください。';
+    });
+  });
+  var panel = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'shT', tabindex: '-1' }, [
+    h('div', { class: 'sh-h' }, [h('div', { class: 'sh-t', id: 'shT', text: title })]),
+    h('div', { class: 'sh-b' }, [h('p', { text: body })]),
+    msg,
+    h('div', { class: 'sh-f' }, [cancel, ok])
+  ]);
+  openSheet(panel, cancel);   /* 誤操作防止のため、最初のフォーカスはキャンセル */
+}
+
+/* ---------- ゴール編集 ---------- */
+function nextGoalName(list){
+  var used = {}; list.forEach(function(d){ used[d.name.trim()] = true; });
+  for (var i = 0; i < 26; i++) { var nm = 'ゴール ' + String.fromCharCode(65 + i); if (!used[nm]) return nm; }
+  return 'ゴール ' + (list.length + 1);
+}
+function openEditor(){
+  var draft = goals.map(function(g){ return { id: g.id, name: g.name, pts: String(g.pts) }; });
+  var rowsEl = h('div'), errEl = h('div', { class: 'sh-e', role: 'alert' }), addBtn, saveBtn, cancelBtn;
+
+  function digits(s){ return toHalf(s).replace(/[^0-9]/g, '').slice(0, 3); }
+  function renderRows(focusIdx){
+    rowsEl.textContent = '';
+    draft.forEach(function(d, i){
+      var nameIn = h('input', { class: 'in', type: 'text', maxlength: String(LIM.maxGoalName), value: d.name, 'aria-label': 'ゴール名 ' + (i + 1), autocomplete: 'off' });
+      nameIn.addEventListener('input', function(){ d.name = nameIn.value; nameIn.classList.remove('bad'); errEl.textContent = ''; });
+      var ptsIn = h('input', { class: 'in num', type: 'text', inputmode: 'numeric', maxlength: '3', value: d.pts, 'aria-label': '1個あたりの得点 ' + (i + 1), autocomplete: 'off' });
+      ptsIn.addEventListener('input', function(e){
+        if (e.isComposing) return;
+        var v = digits(ptsIn.value); if (v !== ptsIn.value) ptsIn.value = v;
+        d.pts = v; ptsIn.classList.remove('bad'); errEl.textContent = '';
+      });
+      ptsIn.addEventListener('change', function(){ var v = digits(ptsIn.value); ptsIn.value = v; d.pts = v; });
+      var del = h('button', { class: 'del', type: 'button', 'aria-label': 'このゴールを削除', html: ICON.close, disabled: draft.length === 1, onclick: function(){
+        draft.splice(i, 1); renderRows(); sync();
+      } });
+      rowsEl.appendChild(h('div', { class: 'er' }, [nameIn, ptsIn, del]));
+    });
+    if (typeof focusIdx === 'number') {
+      var last = rowsEl.lastChild; if (last) { var f = last.querySelector('input'); f.focus(); f.select(); last.scrollIntoView({ block: 'nearest' }); }
+    }
+  }
+  function sync(){ addBtn.disabled = draft.length >= LIM.maxGoals; }
+  function commit(){
+    var out = [], firstBad = null, rows = rowsEl.querySelectorAll('.er');
+    draft.forEach(function(d, i){
+      var nm = d.name.trim(), p = d.pts === '' ? NaN : Number(d.pts), ins = rows[i].querySelectorAll('input');
+      var badN = !nm, badP = !isFinite(p) || p < 0 || p > LIM.maxPts;
+      ins[0].classList.toggle('bad', badN); ins[1].classList.toggle('bad', badP);
+      if ((badN || badP) && !firstBad) firstBad = badN ? ins[0] : ins[1];
+      out.push({ id: d.id, name: nm, pts: Math.floor(p) });
+    });
+    if (firstBad) { errEl.textContent = 'ゴール名と得点（0〜' + LIM.maxPts + '）を、すべて入力してください。'; firstBad.focus(); return; }
+    saveBtn.disabled = true; cancelBtn.disabled = true; errEl.textContent = '';
+    B.saveGoals(out).then(closeSheet).catch(function(e){
+      saveBtn.disabled = false; cancelBtn.disabled = false;
+      errEl.textContent = B.isPermission(e) ? '権限がありません。PINを入力し直してください。' : '保存できませんでした。通信を確認してください。';
+    });
+  }
+  addBtn = h('button', { class: 'btn btn-outline add', type: 'button', onclick: function(){
+    if (draft.length >= LIM.maxGoals) return;
+    draft.push({ id: uid(), name: nextGoalName(draft), pts: '10' }); renderRows(draft.length - 1); sync();
+  } }, [h('span', { html: ICON.plus.replace('width="30" height="30"', 'width="20" height="20"') }), 'ゴールを追加']);
+  cancelBtn = h('button', { class: 'btn btn-outline', type: 'button', text: 'キャンセル', onclick: closeSheet });
+  saveBtn = h('button', { class: 'btn btn-primary', type: 'button', text: '保存する', onclick: commit });
+
+  var panel = h('div', { class: 'sheet full', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'shT', tabindex: '-1' }, [
+    h('div', { class: 'sh-h' }, [h('div', { class: 'sh-t', id: 'shT', text: 'ゴール・配点を編集' }), h('div', { class: 'sh-s', text: '名前と、1個入ったときの得点を決めます（最大' + LIM.maxGoals + '個）。全員の画面に反映されます。' })]),
+    h('div', { class: 'sh-b' }, [
+      h('div', { class: 'eh' }, [h('span', { text: 'ゴール名' }), h('span', { text: '1個の得点' }), h('span')]),
+      rowsEl, addBtn
+    ]),
+    errEl,
+    h('div', { class: 'sh-f' }, [cancelBtn, saveBtn])
+  ]);
+  renderRows(); sync(); openSheet(panel, panel);
+}
+
+/* ---------- イベント ---------- */
+$('btnSave').addEventListener('click', save);
+$('btnRedo').addEventListener('click', function(){ if (saving) return; resetForm(); nameEl.focus(); });
+nameEl.addEventListener('input', update);
+$('btnEdit').addEventListener('click', openEditor);
+$('btnWipe').addEventListener('click', function(){
+  if (!records.length) { toast('消す記録はありません'); return; }
+  var ids = records.map(function(r){ return r.id; });
+  confirmSheet('本日の記録をすべて消す', records.length + '人分の記録をすべて消します。ランキング画面からも消え、元に戻せません。', 'すべて消す', function(){ return B.removeRecords(ids); });
+});
+function unlock(){
+  var pin = $('pin').value.trim(); if (!pin) { $('pinMsg').textContent = 'PINを入力してください。'; return; }
+  $('btnUnlock').disabled = true; $('pinMsg').textContent = '';
+  B.unlock(pin).then(function(ok){
+    $('btnUnlock').disabled = false;
+    if (!ok) { $('pinMsg').textContent = 'PINが違います。もう一度入力してください。'; $('pin').select(); }
+  }).catch(function(){
+    $('btnUnlock').disabled = false; $('pinMsg').textContent = '確認できませんでした。通信を確認してください。';
+  });
+}
+$('btnUnlock').addEventListener('click', unlock);
+$('pin').addEventListener('keydown', function(e){ if (e.key === 'Enter' && !e.isComposing) unlock(); });
+
+/* ---------- 起動 ---------- */
+function explain(e){
+  var c = String((e && e.code) || ''), m = String((e && e.message) || e || '');
+  if (c === 'auth/operation-not-allowed' || c === 'auth/admin-restricted-operation') return 'FirebaseコンソールでAnonymous(匿名)認証が有効になっていません。';
+  if (c === 'auth/network-request-failed') return '通信できません。電波の良い場所でもう一度開いてください。';
+  if (/dynamically imported|Failed to fetch|import/i.test(m)) return 'Firebaseの読み込みに失敗しました。通信を確認してもう一度開いてください。';
+  return '起動に失敗しました：' + (c || m);
+}
+B.onError(function(e){ if (!fatal) { fatal = B.isPermission(e) ? 'データベースの読み取りが許可されていません。ルールを確認してください。' : explain(e); screen(); } });
+screen(); buildGoals(); renderRecent();
+B.init({ auth: true }).then(function(){
+  authReady = true;
+  B.onConnection(function(ok){ connected = ok; screen(); });
+  B.onGoals(function(list){
+    goals = list || B.defaultGoals();
+    var keep = {}; goals.forEach(function(g){ keep[g.id] = counts[g.id] || 0; }); counts = keep;
+    buildGoals();
+  });
+  B.onRecords(function(list){ records = list; renderRecent(); });
+  B.onStaff(function(ok){ staff = ok; screen(); if (ok) setTimeout(function(){ if (!saving) nameEl.focus({ preventScroll: true }); }, 0); });
+  screen();
+}).catch(function(e){ fatal = explain(e); screen(); });
+})();
+</script>
+</body>
+</html>

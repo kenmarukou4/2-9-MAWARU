@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "config": {
+      ".read": false,
+      ".write": false
+    },
+    "staff": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && newData.isString() && newData.val() === root.child('config/pin').val()"
+      }
+    },
+    "records": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null && root.child('staff/' + auth.uid).exists()",
+        ".validate": "newData.hasChildren(['name', 'score', 'at'])",
+        "name":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 14" },
+        "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 99999" },
+        "at":    { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "goals": {
+      ".read": true,
+      ".write": "auth != null && root.child('staff/' + auth.uid).exists()",
+      "$gid": {
+        ".validate": "newData.hasChildren(['name', 'pts', 'order'])",
+        "name":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 8" },
+        "pts":   { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 999" },
+        "order": { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
